@@ -16,7 +16,7 @@ use Illuminate\Validation\Rules\Password;
 
 class PageController extends Controller
 {
-   private function getGoogleDriveService()
+    private function getGoogleDriveService()
     {
         $client = new \Google\Client();
         $client->setClientId(env('GOOGLE_DRIVE_CLIENT_ID'));
@@ -74,7 +74,7 @@ class PageController extends Controller
             ]);
 
             $service->permissions->create($file->id, $permission);
-            $valData['image'] = $file->id.'/'.$fileMetadata->name;
+            $valData['image'] = $file->id . '/' . $fileMetadata->name;
         } else {
             unset($valData['image']);
         }

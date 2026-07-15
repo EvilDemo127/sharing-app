@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\QuestionCommentController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\QuestionLikeController;
+use App\Http\Controllers\QuestionSaveController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\LoginCheck;
 use App\Models\QuestionComment;
@@ -12,21 +15,21 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/profile/edit', [PageController::class, 'profilEdit'])->name('profile.edit');
     Route::post('/profile/update', [PageController::class, 'profileUpdate'])->name('profile.update');
     Route::get('/profile/my-question', [QuestionController::class, 'question_owner'])->name('question.own');
-    Route::get('/profile/question', [QuestionController::class, 'question_save'])->name('question.save');
+    Route::get('/profile/question', [QuestionSaveController::class, 'question_save'])->name('question.save');
 
     Route::get('/', [QuestionController::class, 'home'])->name('home');
     Route::get('/question/details/{slug}', [QuestionController::class, 'details'])->name('question.details');
-    Route::post('/question/like/{id}', [QuestionController::class, 'like_handle'])->name('like.handle');
-    Route::post('/question/save/{id}', [QuestionController::class, 'save_handle'])->name('save.handle');
-    Route::post('/question/comment/create/{id}', [QuestionController::class, 'comment_create'])->name('comment.create');
+    Route::post('/question/like/{id}', [QuestionLikeController::class, 'like_handle'])->name('like.handle');
+    Route::post('/question/save/{id}', [QuestionSaveController::class, 'save_handle'])->name('save.handle');
+    Route::post('/question/comment/create/{id}', [QuestionCommentController::class, 'comment_create'])->name('comment.create');
 
     Route::get('/question/create', [QuestionController::class, 'create_question'])->name('question.create');
     Route::post('/question/store', [QuestionController::class, 'store_question'])->name('question.store');
     Route::post('/question/delete/{id}', [QuestionController::class, 'delete_question'])->name('question.delete');
     Route::get('/question/filter/{slug}', [QuestionController::class, 'filter_question'])->name('question.filter');
     Route::get('/question/searching/{search}', [QuestionController::class, 'search_question'])->name('question.search');
-     Route::post('/comment/edit/{id}', [QuestionController::class, 'edit_comment'])->name('comment.edit');
-     Route::post('/comment/delete/{id}', [QuestionController::class, 'delete_comment'])->name('comment.delete');
+     Route::post('/comment/edit/{id}', [QuestionCommentController::class, 'edit_comment'])->name('comment.edit');
+     Route::post('/comment/delete/{id}', [QuestionCommentController::class, 'delete_comment'])->name('comment.delete');
      Route::get('/question/edit/{id}', [QuestionController::class, 'edit_question'])->name('edit_question');
      Route::post('/question/update/{id}', [QuestionController::class, 'question_update'])->name('update_question');
      Route::post('/question/fix/{id}', [QuestionController::class, 'question_fix'])->name('fix_question');
