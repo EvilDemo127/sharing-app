@@ -34,8 +34,12 @@ class QuestionController extends Controller
             $query->where('user_id', $userId);
         }])
 
+        //user save ques 
+        ->withExists(['qsave as is_Save' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])
         ->orderBy('is_fixed','desc')
-        ->latest()
+        ->orderBy('created_at', 'desc')
         ->paginate(3)->withQueryString();
         return Inertia::render('Home', ['questions' => $questions]);
     }
@@ -46,7 +50,11 @@ class QuestionController extends Controller
 
         $ques = Question::where('slug', $slug)->with('comment.user', 'user','tag')->withCount('like', 'comment', 'qsave')->withExists(['like as is_Like' => function ($query) use ($userId) {
             $query->where('user_id', $userId);
-        }])->firstOrFail();
+        }])
+        ->withExists(['qsave as is_Save' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])
+        ->firstOrFail();
         return Inertia::render('QuestionDetail', ['ques' => $ques]);
     }
 
@@ -119,7 +127,27 @@ class QuestionController extends Controller
         // $questions =Question::where('user_id',Auth::id())->get();
         $questions = Auth::user()->questions()->with(['user', 'comment'])->withCount('like', 'comment', 'qsave')->withExists(['like as is_Like' => function ($query) use ($userId) {
             $query->where('user_id', $userId);
-        }])->latest()->get();
+        }])
+        ->withExists(['qsave as is_Save' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])
+        ->latest()->get();
+        return Inertia::render('Question', ['questions' => $questions]);
+    }
+
+    public function question_save()
+    {
+         $userId = Auth::id();
+        // $questions =Question::where('user_id',Auth::id())->get();
+        $questions =Question::whereHas('qsave',function($query) use($userId){
+            $query->where('user_id',$userId);
+        })->with(['comment.user','user', 'comment'])->withCount('like', 'comment', 'qsave')->withExists(['like as is_Like' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])
+        ->withExists(['qsave as is_Save' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])
+        ->latest()->get();
         return Inertia::render('Question', ['questions' => $questions]);
     }
 
@@ -195,6 +223,28 @@ $comment->save();
          $question->is_fixed = !$question->is_fixed;
          $question->save();
         return redirect()->back();
+    }
+
+    public function save_handle($id)
+    {
+        $userId= Auth::id();
+        $quesSave =Question::find($id);
+        $isSave = $quesSave->qsave()->where('user_id',$userId)->first();
+        if($isSave)
+            {
+                $isSave->delete();
+                $save=false;
+            }else{
+                $quesSave->qsave()->create([
+                    'user_id'=>$userId
+                ]);
+                $save=true;
+            }
+        $saveCount=$quesSave->qsave()->count();
+        return response()->json([
+            'is_Save' => $save,
+            'qsave_count' => $saveCount
+        ]);
     }
 
 }

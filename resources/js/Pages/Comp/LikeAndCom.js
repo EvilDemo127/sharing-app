@@ -21,6 +21,19 @@ export function LikeAndCom() {
             .catch((err) => console.log(err));
     };
 
+    //question save 
+    const click_save = (save) => {
+        axios
+            .post(route("save.handle", save.id))
+            .then((res) => {
+                console.log(res.data.is_Save);
+                
+                save.qsave_count = res.data.qsave_count;
+                save.is_Save = res.data.is_Save;
+            })
+            .catch((err) => console.log(err));
+    };
+
     const toggleCommentBox = (id) => {
         if (showCommentBox.value === id) {
             showCommentBox.value = null;
@@ -146,6 +159,7 @@ export function LikeAndCom() {
         deleteComment,
         saveComment,
         editCommentText,
-        needFixed
+        needFixed,
+        click_save
     };
 }

@@ -145,10 +145,11 @@
                                 }}</span>
                             </div>
                             <div
+                                @click="LandC.click_save(q)"
                                 class="d-flex align-items-center gap-1.5 cursor-pointer hover-scale"
                                 style="cursor: pointer"
                             >
-                                <i class="far fa-star text-warning fs-5"></i>
+                                <i :class="q.is_Save ?'fas fa-star text-warning fs-5' : 'far fa-star text-warning fs-5'"></i>
                                 <span class="small fw-semibold text-warning">{{
                                     q.qsave_count || 0
                                 }}</span>

@@ -98,7 +98,7 @@
                             </Link>
                         </li>
                         <li>
-                            <Link class="dropdown-item rounded-2 py-2 d-flex align-items-center gap-2">
+                            <Link :href="route('question.save')" class="dropdown-item rounded-2 py-2 d-flex align-items-center gap-2">
                                 <i class="fas fa-bookmark text-muted" style="width: 18px;"></i> Saved Lists
                             </Link>
                         </li>
