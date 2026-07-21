@@ -134,10 +134,11 @@
 
 <script setup>
 import { ref } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
+import { router, useForm, usePage } from "@inertiajs/vue3";
 import Master from "./Layout/Master.vue";
 
 const selectedUser = ref(null);
+const notiCount =ref(0);
 
 defineProps({
     users: Object,
@@ -149,6 +150,8 @@ const form = useForm({
     receiver_id: "",
     message: "",
 });
+
+
 
 const selectUser = (user) => {
     selectedUser.value = user.id;

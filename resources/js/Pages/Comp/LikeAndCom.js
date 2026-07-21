@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import axios from "axios";
 import { computed } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
@@ -11,6 +11,15 @@ export function LikeAndCom() {
     const page = usePage();
     const activeDropdownId = ref(null);
     const mobileMenuVie = ref(null);
+    const notiCount =ref(0);
+
+    onMounted(()=>{
+        const loginId =page.props.user.id
+        window.Echo.private(`chat.${loginId}`).listen('MessageSend',(e)=>{
+            notiCount.value++
+        })
+    })
+
     //like handle
     const click_like = (like) => {
         axios
@@ -162,5 +171,6 @@ export function LikeAndCom() {
         mobileMenuVie,
         mobileMenu,
         activeDropdownId,
+        notiCount
     };
 }

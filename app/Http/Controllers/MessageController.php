@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSent;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class MessageController extends Controller
         })->orWhere(function ($q) use ($authId, $id) {
             $q->where('sender_id', $id)->where('receiver_id', $authId);
         })->orderBy('created_at', 'asc')->get();
-        
+
         $users = User::whereNot('id', auth()->id())->get();
 
         return Inertia::render('Message',[
@@ -41,7 +42,8 @@ class MessageController extends Controller
             'message' => 'required'
         ]);
         $valiMessage['sender_id'] = Auth::id();
-        Message::create($valiMessage);
+        $message = Message::create($valiMessage);
+        broadcast(new MessageSent($message))->toOthers();
         return redirect()->back();
     }
 }
