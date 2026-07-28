@@ -1,60 +1,143 @@
 FROM php:8.2-apache
 
-# Install system dependencies and ALL required PHP extensions including pgsql
+
+# -----------------------------
+# PHP Extensions + Dependencies
+# -----------------------------
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     zlib1g-dev \
     libxml2-dev \
     libzip-dev \
     libonig-dev \
-    libcurl4-openssl-dev \
-    libsqlite3-dev \
     libpq-dev \
     zip \
-    curl \
     unzip \
+    curl \
     git \
+    supervisor \
     && docker-php-ext-configure gd \
-    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring zip exif pcntl bcmath gd ctype fileinfo xml
+    && docker-php-ext-install \
+        pdo_mysql \
+        pdo_pgsql \
+        mbstring \
+        zip \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        ctype \
+        fileinfo \
+        xml
 
-# 🌟 Node.js နှင့် NPM ကို အမှားကင်းစင်စွာ အလွယ်ကူဆုံး စနစ်တကျ သွင်းယူခြင်း
-RUN apt-get update && apt-get install -y nodejs npm
 
-# Enable Apache rewrite module
+# -----------------------------
+# Node.js 20
+# -----------------------------
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+
+# -----------------------------
+# Apache Laravel public folder
+# -----------------------------
 RUN a2enmod rewrite
 
-# Update Apache VirtualHost configuration directly to allow overrides and set document root
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-RUN sed -i 's!/var/www/!/var/www/html/public!g' /etc/apache2/apache2.conf
+RUN sed -i \
+    's!/var/www/html!/var/www/html/public!g' \
+    /etc/apache2/sites-available/000-default.conf
 
-# Force Apache to allow .htaccess on the public directory specifically
+
 RUN echo '<Directory /var/www/html/public>\n\
     Options Indexes FollowSymLinks\n\
     AllowOverride All\n\
     Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
+</Directory>' \
+>> /etc/apache2/apache2.conf
 
-# Install Composer
+
+# -----------------------------
+# Composer
+# -----------------------------
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy project files
+
 WORKDIR /var/www/html
+
+
+# -----------------------------
+# Copy Laravel Project
+# -----------------------------
 COPY . .
 
-# Set Composer environment variable to allow superuser
+
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Install PHP dependencies
-RUN export COMPOSER_PROCESS_TIMEOUT=600 && \
-    composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts --prefer-dist --no-interaction
 
-# Install Frontend dependencies and Build assets for Laravel Breeze
-RUN npm install && npm run build
+# -----------------------------
+# Install Laravel packages
+# -----------------------------
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --prefer-dist
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Run migrations automatically before launching Apache
-# CMD php artisan migrate  && php artisan db:seed  && apache2-foreground
+# -----------------------------
+# Vite Build
+# -----------------------------
+RUN npm install
 
-EXPOSE 80
+RUN npm run build
+
+
+
+# -----------------------------
+# Laravel Permission
+# -----------------------------
+RUN chown -R www-data:www-data \
+    storage \
+    bootstrap/cache
+
+
+
+# -----------------------------
+# Supervisor
+# Apache + Reverb
+# -----------------------------
+RUN mkdir -p /var/log/supervisor
+
+
+RUN echo "[supervisord]\n\
+nodaemon=true\n\
+\n\
+[program:apache]\n\
+command=/usr/local/bin/apache2-foreground\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stderr_logfile=/dev/stderr\n\
+\n\
+[program:reverb]\n\
+command=php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
+directory=/var/www/html\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stderr_logfile=/dev/stderr\n" \
+> /etc/supervisor/conf.d/supervisord.conf
+
+
+
+# -----------------------------
+# Ports
+# -----------------------------
+EXPOSE 80 8080
+
+
+
+# -----------------------------
+# Start
+# -----------------------------
+CMD ["supervisord","-c","/etc/supervisor/supervisord.conf"]
