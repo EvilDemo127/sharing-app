@@ -98,7 +98,6 @@ ENV VITE_REVERB_SCHEME=https
 # -----------------------------
 # Build Frontend
 # -----------------------------
-RUN php artisan optimize:clear
 RUN npm install
 RUN npm run build
 
@@ -130,7 +129,7 @@ autostart=true\n\
 autorestart=true\n\
 \n\
 [program:reverb]\n\
-command=/usr/local/bin/php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
+command=/bin/sh -c 'php artisan optimize:clear && php artisan reverb:start --host=0.0.0.0 --port=8080'\n\
 directory=/var/www/html\n\
 autostart=true\n\
 autorestart=true\n\
