@@ -55,12 +55,11 @@ class MessageController extends Controller
             'message' => $message
         ]);
     }
-    
+
     public function read_message(Message $message)
     {
         $message->is_read = true;
         $message->save();
-        \Illuminate\Support\Facades\Log::info("MessageRead fired");
         broadcast(new MessageRead($message));
 
         return response()->json([
