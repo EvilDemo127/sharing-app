@@ -49,7 +49,7 @@ class MessageController extends Controller
         ]);
         $valiMessage['sender_id'] = Auth::id();
         $message = Message::create($valiMessage);
-        broadcast(new MessageSent($message))->toOthers();
+        broadcast(new MessageSent($message));
         return response()->json([
             'success' => true,
             'message' => $message
@@ -60,6 +60,7 @@ class MessageController extends Controller
     {
         $message->is_read = true;
         $message->save();
+       
         broadcast(new MessageRead($message));
 
         return response()->json([
