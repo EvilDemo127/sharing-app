@@ -49,7 +49,6 @@ class MessageController extends Controller
         ]);
         $valiMessage['sender_id'] = Auth::id();
         $message = Message::create($valiMessage);
-        dd($message);
         // broadcast(new MessageSent($message))->toOthers();
         return response()->json([
             'success' => true,
