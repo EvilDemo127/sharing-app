@@ -2,7 +2,7 @@ FROM php:8.2-apache
 
 
 # ==================================
-# PHP Extensions + Dependencies
+# PHP Extensions + System Packages
 # ==================================
 RUN apt-get update && apt-get install -y \
     libpng-dev \
@@ -28,7 +28,9 @@ RUN apt-get update && apt-get install -y \
         gd \
         ctype \
         fileinfo \
-        xml
+        xml \
+    && rm -rf /var/lib/apt/lists/*
+
 
 
 # ==================================
@@ -36,6 +38,7 @@ RUN apt-get update && apt-get install -y \
 # ==================================
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
+
 
 
 # ==================================
@@ -49,11 +52,13 @@ RUN a2enmod \
     headers
 
 
+
 # ==================================
 # Apache Virtual Host
-# Laravel + Reverb WebSocket Proxy
+# Laravel + Reverb WebSocket
 # ==================================
-RUN echo '<VirtualHost *:80>
+RUN cat <<'EOF' > /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:80>
 
     ServerName sharing-app-6vcs.onrender.com
 
@@ -64,25 +69,20 @@ RUN echo '<VirtualHost *:80>
     ProxyPreserveHost On
 
 
-    RewriteEngine On
-
-    RewriteCond %{HTTP:Upgrade} websocket [NC]
-    RewriteCond %{HTTP:Connection} upgrade [NC]
-    RewriteRule ^/app/(.*) ws://127.0.0.1:8080/app/$1 [P,L]
-
-
-    ProxyPass /app http://127.0.0.1:8080/app
-    ProxyPassReverse /app http://127.0.0.1:8080/app
+    # Laravel Reverb WebSocket
+    ProxyPass /app ws://127.0.0.1:8080/app
+    ProxyPassReverse /app ws://127.0.0.1:8080/app
 
 
     <Directory /var/www/html/public>
+        Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
 
 
-</VirtualHost>' \
-> /etc/apache2/sites-available/000-default.conf
+</VirtualHost>
+EOF
 
 
 
@@ -92,13 +92,16 @@ RUN echo '<VirtualHost *:80>
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 
+
 WORKDIR /var/www/html
 
 
+
 # ==================================
-# Copy Laravel App
+# Copy Laravel Project
 # ==================================
 COPY . .
+
 
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -106,7 +109,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 
 # ==================================
-# Laravel Dependencies
+# Install Laravel Packages
 # ==================================
 RUN composer install \
     --no-dev \
@@ -117,7 +120,7 @@ RUN composer install \
 
 
 # ==================================
-# Vite Build Environment
+# Vite Build Variables
 # ==================================
 ENV VITE_REVERB_APP_ID=664807
 ENV VITE_REVERB_APP_KEY=gc99wf0dhlzygomofzex
@@ -128,7 +131,7 @@ ENV VITE_REVERB_SCHEME=https
 
 
 # ==================================
-# Frontend Build
+# Build Frontend
 # ==================================
 RUN npm install
 
@@ -146,15 +149,18 @@ RUN chown -R www-data:www-data \
 
 
 # ==================================
-# Supervisor
+# Supervisor Config
 # Apache + Reverb
 # ==================================
 RUN mkdir -p /var/log/supervisor
 
+
 RUN cat <<'EOF' > /etc/supervisor/supervisord.conf
+
 [supervisord]
 nodaemon=true
 logfile=/dev/null
+
 
 [program:apache]
 command=/usr/local/bin/apache2-foreground
@@ -164,6 +170,7 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
+
 
 [program:reverb]
 command=/usr/local/bin/php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080
@@ -175,18 +182,26 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
+
 EOF
 
 
 
 # ==================================
-# Ports
+# Laravel Cache Clear
+# ==================================
+RUN php artisan optimize:clear || true
+
+
+
+# ==================================
+# Render Port
 # ==================================
 EXPOSE 80
 
 
 
 # ==================================
-# Start Container
+# Start
 # ==================================
 CMD ["supervisord","-c","/etc/supervisor/supervisord.conf"]
