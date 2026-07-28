@@ -7,6 +7,10 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 
 window.Pusher = Pusher;
+console.log('VITE_REVERB_APP_KEY:', import.meta.env.VITE_REVERB_APP_KEY);
+console.log('VITE_REVERB_HOST:', import.meta.env.VITE_REVERB_HOST);
+console.log('VITE_REVERB_PORT:', import.meta.env.VITE_REVERB_PORT);
+console.log('VITE_REVERB_SCHEME:', import.meta.env.VITE_REVERB_SCHEME);
 
 window.Echo = new Echo({
     broadcaster: 'reverb', 
@@ -17,3 +21,5 @@ window.Echo = new Echo({
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
 });
+
+console.log('Echo:', window.Echo);
