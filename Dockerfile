@@ -151,32 +151,31 @@ RUN chown -R www-data:www-data \
 # ==================================
 RUN mkdir -p /var/log/supervisor
 
+RUN cat <<'EOF' > /etc/supervisor/supervisord.conf
+[supervisord]
+nodaemon=true
+logfile=/dev/null
 
-RUN echo "[supervisord]\n\
-nodaemon=true\n\
-logfile=/dev/null\n\
-\n\
-[program:apache]\n\
-command=/usr/local/bin/apache2-foreground\n\
-autostart=true\n\
-autorestart=true\n\
-stdout_logfile=/dev/stdout\n\
-stdout_logfile_maxbytes=0\n\
-stderr_logfile=/dev/stderr\n\
-stderr_logfile_maxbytes=0\n\
-\n\
-[program:reverb]\n\
-command=/usr/local/bin/php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
-directory=/var/www/html\n\
-autostart=true\n\
-autorestart=true\n\
-startsecs=5\n\
-stdout_logfile=/dev/stdout\n\
-stdout_logfile_maxbytes=0\n\
-stderr_logfile=/dev/stderr\n\
-stderr_logfile_maxbytes=0\n\
-" \
-> /etc/supervisor/supervisord.conf
+[program:apache]
+command=/usr/local/bin/apache2-foreground
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:reverb]
+command=/usr/local/bin/php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080
+directory=/var/www/html
+autostart=true
+autorestart=true
+startsecs=5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+EOF
 
 
 
