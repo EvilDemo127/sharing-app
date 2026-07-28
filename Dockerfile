@@ -39,9 +39,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 
 
 # -----------------------------
-# Apache Laravel public folder
+# Apache Config
 # -----------------------------
-RUN a2enmod rewrite
+RUN a2enmod rewrite proxy proxy_http proxy_wstunnel
 
 RUN sed -i \
     's!/var/www/html!/var/www/html/public!g' \
@@ -66,7 +66,7 @@ WORKDIR /var/www/html
 
 
 # -----------------------------
-# Copy Laravel Project
+# Copy Project
 # -----------------------------
 COPY . .
 
@@ -75,7 +75,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 
 # -----------------------------
-# Install Laravel packages
+# Laravel Dependencies
 # -----------------------------
 RUN composer install \
     --no-dev \
@@ -85,10 +85,20 @@ RUN composer install \
 
 
 # -----------------------------
-# Vite Build
+# Vite Environment
+# (Build time variables)
+# -----------------------------
+ENV VITE_REVERB_APP_ID=664807
+ENV VITE_REVERB_APP_KEY=gc99wf0dhlzygomofzex
+ENV VITE_REVERB_HOST=sharing-app-6vcs.onrender.com
+ENV VITE_REVERB_PORT=443
+ENV VITE_REVERB_SCHEME=https
+
+
+# -----------------------------
+# Build Frontend
 # -----------------------------
 RUN npm install
-
 RUN npm run build
 
 
@@ -103,7 +113,7 @@ RUN chown -R www-data:www-data \
 
 
 # -----------------------------
-# Supervisor
+# Supervisor Config
 # Apache + Reverb
 # -----------------------------
 RUN mkdir -p /var/log/supervisor
@@ -111,13 +121,16 @@ RUN mkdir -p /var/log/supervisor
 
 RUN echo "[supervisord]\n\
 nodaemon=true\n\
+logfile=/dev/null\n\
 \n\
 [program:apache]\n\
 command=/usr/local/bin/apache2-foreground\n\
 autostart=true\n\
 autorestart=true\n\
 stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n\
 stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0\n\
 \n\
 [program:reverb]\n\
 command=php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
@@ -125,8 +138,10 @@ directory=/var/www/html\n\
 autostart=true\n\
 autorestart=true\n\
 stdout_logfile=/dev/stdout\n\
-stderr_logfile=/dev/stderr\n" \
-> /etc/supervisor/conf.d/supervisord.conf
+stdout_logfile_maxbytes=0\n\
+stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0\n\
+" > /etc/supervisor/conf.d/supervisord.conf
 
 
 
