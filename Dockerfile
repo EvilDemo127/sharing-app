@@ -88,11 +88,11 @@ RUN composer install \
 # Vite Environment
 # (Build time variables)
 # -----------------------------
-ENV VITE_REVERB_APP_ID=664807
-ENV VITE_REVERB_APP_KEY=gc99wf0dhlzygomofzex
-ENV VITE_REVERB_HOST=sharing-app-6vcs.onrender.com
-ENV VITE_REVERB_PORT=443
-ENV VITE_REVERB_SCHEME=https
+# ENV VITE_REVERB_APP_ID=664807
+# ENV VITE_REVERB_APP_KEY=gc99wf0dhlzygomofzex
+# ENV VITE_REVERB_HOST=sharing-app-6vcs.onrender.com
+# ENV VITE_REVERB_PORT=443
+# ENV VITE_REVERB_SCHEME=https
 
 
 # -----------------------------
