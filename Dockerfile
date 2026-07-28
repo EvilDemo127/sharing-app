@@ -88,11 +88,11 @@ RUN composer install \
 # Vite Environment
 # (Build time variables)
 # -----------------------------
-# ENV VITE_REVERB_APP_ID=664807
-# ENV VITE_REVERB_APP_KEY=gc99wf0dhlzygomofzex
-# ENV VITE_REVERB_HOST=sharing-app-6vcs.onrender.com
-# ENV VITE_REVERB_PORT=443
-# ENV VITE_REVERB_SCHEME=https
+ENV VITE_REVERB_APP_ID=664807
+ENV VITE_REVERB_APP_KEY=gc99wf0dhlzygomofzex
+ENV VITE_REVERB_HOST=sharing-app-6vcs.onrender.com
+ENV VITE_REVERB_PORT=443
+ENV VITE_REVERB_SCHEME=https
 
 
 # -----------------------------
@@ -118,7 +118,6 @@ RUN chown -R www-data:www-data \
 # -----------------------------
 RUN mkdir -p /var/log/supervisor
 
-
 RUN echo "[supervisord]\n\
 nodaemon=true\n\
 logfile=/dev/null\n\
@@ -127,9 +126,13 @@ logfile=/dev/null\n\
 command=/usr/local/bin/apache2-foreground\n\
 autostart=true\n\
 autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n\
+stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0\n\
 \n\
 [program:reverb]\n\
-command=/bin/sh -c 'php artisan optimize:clear && php artisan reverb:start --host=0.0.0.0 --port=8080'\n\
+command=/usr/local/bin/php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
 directory=/var/www/html\n\
 autostart=true\n\
 autorestart=true\n\
@@ -138,7 +141,7 @@ stdout_logfile=/dev/stdout\n\
 stdout_logfile_maxbytes=0\n\
 stderr_logfile=/dev/stderr\n\
 stderr_logfile_maxbytes=0\n\
-" > /etc/supervisor/conf.d/supervisord.conf
+" > /etc/supervisor/supervisord.conf
 
 
 
