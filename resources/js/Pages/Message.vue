@@ -204,7 +204,8 @@ const selectUser = (user) => {
 
 const sendMessage = () => {
     if (!form.message.trim()) return;
-
+    console.log(form.data());
+    
     axios
         .post(route("store_message"), form.data())
         .then((res) => {
