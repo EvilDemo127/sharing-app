@@ -232,6 +232,8 @@ const formatChatTime = (chatDate) => {
 };
 
 const makeReas = async (message) => {
+    console.log("message read",message.id);
+    
     await axios
         .post(route("read_message", message.id))
         .then((res) => {
