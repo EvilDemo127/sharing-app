@@ -1,10 +1,10 @@
 <template>
     <Master>
-        <div class="row g-3">
+        <div class="row g-3" style="height: 450px">
             <div class="col-4 bg-white shadow rounded p-2">
                 <div
                     class="d-flex align-items-center p-2 mb-1 rounded"
-                    v-for="user in users"
+                    v-for="user in loadUser"
                     :key="user.id"
                     @click.prevent="selectUser(user)"
                     :class="
@@ -48,8 +48,8 @@
             </div>
 
             <div
+                v-if="selectedUser"
                 class="col-8 bg-white shadow rounded p-3 d-flex flex-column justify-content-between"
-                style="height: 450px"
             >
                 <div
                     ref="messageContainer"
@@ -167,8 +167,9 @@ const props = defineProps({
     messages: Array,
     selectedUser: [Number, String, Object],
 });
+
 const newMessage = ref(props.messages || []);
-const selectedUser = ref(props.selectedUser || null);
+const selectedUser = ref(null);
 const loadUser = ref(props.users);
 
 const form = useForm({
@@ -176,72 +177,14 @@ const form = useForm({
     message: "",
 });
 
-const scolBut = async () => {
-    await nextTick(); // waiting to finished DOM
-    if (messageContainer.value) {
-        messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
-    }
-};
-
-watch(
-    () => props.messages,
-    (newVal) => {
-        newMessage.value = newVal;
-        scolBut();
-    },
-    { deep: true },
-);
-
-watch(
-    () => props.users,
-    (newVal) => {
-        loadUser.value = newVal;
-        // scolBut();
-    },
-    { deep: true },
-);
-
-onMounted(() => {
-    console.log("Echo:", window.Echo);
-    console.log("AUTH:", authId);
-
-    if (!window.Echo) {
-        console.log("Echo is not ready");
-        return;
-    }
-
-    window.Echo.private(`chat.${authId}`).listen(
-        ".App\\Events\\MessageSent",
-        (e) => {
-            if (props.selectedUser === e.sender.uuid) {
-                newMessage.value.push(e);
-            } else {
-                const newMessageUser = loadUser.value.find(
-                    (user) => user.id === e.sender.id,
-                );
-                if (newMessageUser) {
-                    newMessageUser.unread_count++;
-                }
-            }
-        },
-    );
-});
-
-onUnmounted(() => {
-    console.log("UNMOUNT");
-
-    window.Echo.leave(`chat.${authId}`);
-});
-
 const selectUser = (user) => {
     const target = loadUser.value.find((u) => u.id === user.id);
+    scolBut();
     if (target) {
         target.unread_count = 0;
     }
     selectedUser.value = user.uuid;
     form.receiver_id = user.id;
-    console.log("recieve id", form.receiver_id);
-
     router.get(
         route("get_message", user.uuid),
         {},
@@ -261,7 +204,6 @@ const selectUser = (user) => {
 
 const sendMessage = () => {
     if (!form.message.trim()) return;
-    console.log("form", form);
 
     axios
         .post(route("store_message"), form.data())
@@ -270,6 +212,13 @@ const sendMessage = () => {
             form.reset("message");
         })
         .catch((err) => console.log(err));
+};
+
+const scolBut = async () => {
+    await nextTick(); // waiting to finished DOM
+    if (messageContainer.value) {
+        messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    }
 };
 
 const formatChatTime = (chatDate) => {
@@ -282,6 +231,78 @@ const formatChatTime = (chatDate) => {
 };
 
 const makeReas = async (message) => {
-    await axios.post(route("read_message", message.id));
+    await axios
+        .post(route("read_message", message.id))
+        .then((res) => {
+            
+        })
+        .catch((err) => {
+            console.log("READ ERROR", err.response);
+        });
 };
+
+watch(
+    () => props.messages,
+    (newVal) => {
+        newMessage.value = newVal;
+        scolBut();
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.users,
+    (newVal) => {
+        loadUser.value = newVal;
+        scolBut();
+    },
+    { deep: true },
+);
+
+onMounted(() => {
+    if (!window.Echo) {
+        console.log("Echo is not ready");
+        return;
+    }
+
+    window.Echo.private(`chat.${authId}`)
+        .listen(".App\\Events\\MessageSent", (e) => {
+            
+            if (selectedUser.value === e.sender.uuid) {
+                newMessage.value.push(e);
+                makeReas(e);
+            } else {
+                const newMessageUser = loadUser.value.find(
+                    (user) => Number(user.id) === Number(e.sender.id)
+                );
+
+
+                if (newMessageUser) {
+
+                        newMessageUser.unread_count =
+                        Number(newMessageUser.unread_count ?? 0) + 1;
+
+                    console.log(
+                        "Unread Count",
+                        newMessageUser.unread_count
+                    );
+                }
+            }
+        })
+
+        .listen(".MessageRead", (e) => {
+            const messages = newMessage.value.find(
+                (msg) => msg.id === e.message_id,
+            );
+            if (messages) {
+                messages.is_read = e.is_read;
+            }
+        });
+});
+
+onUnmounted(() => {
+    if (window.Echo) {
+        window.Echo.leave(`chat.${authId}`);
+    }
+});
 </script>

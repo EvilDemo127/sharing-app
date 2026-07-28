@@ -33,8 +33,13 @@ class MessageRead implements ShouldBroadcastNow
     public function broadcastOn()
     {
         return new PrivateChannel(
-            'chat.' . Auth::id()
+            'chat.' . $this->message->sender_id
         );
+    }
+
+    public function broadcastAs()
+    {
+        return 'MessageRead';
     }
 
     public function broadcastWith()
@@ -45,4 +50,5 @@ class MessageRead implements ShouldBroadcastNow
             'is_read' => true
         ];
     }
+
 }

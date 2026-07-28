@@ -1,43 +1,55 @@
 # Real-time Chat Message Flow
 
+## Stack
+
+- Laravel
+- Inertia.js
+- Vue 3
+- Laravel Echo
+- Reverb / Pusher
+- Private Channel
+
+---
+
+# Send Message Flow
+
+```
+Sender Vue
+    |
+    | Axios POST
+    ↓
+Laravel Controller
+    |
+    | Save Message
+    ↓
+Database
+    |
+    | Broadcast MessageSent
+    ↓
+Private Channel
+chat.receiver_id
+    |
+    ↓
+Receiver Echo Listener
+    |
+    ↓
+UI Update
+```
+
+---
+
 ## Sender Side
 
-```text
-Sender
- |
- | axios POST
- |
- ↓
-Laravel Controller
- |
- | Save message to database
- |
- ↓
-Broadcast MessageSent Event
- |
- ↓
-Return response with message data
- |
- ↓
-newMessage.push(response.data.message)
- |
- ↓
-UI updates immediately
+User sends message:
+
+```javascript
+axios.post(
+    route("store_message"),
+    form.data()
+)
 ```
 
-### Detail
-
-1. User types a message.
-2. Vue sends the message using Axios.
-
-```js
-axios.post(route('store_message'), {
-    receiver_id: 3,
-    message: "Hello"
-});
-```
-
-3. Laravel receives the request.
+Laravel:
 
 ```php
 $message = Message::create([
@@ -45,154 +57,166 @@ $message = Message::create([
     'receiver_id' => $request->receiver_id,
     'message' => $request->message
 ]);
-```
 
-4. Laravel broadcasts the event.
-
-```php
 broadcast(new MessageSent($message))->toOthers();
 ```
 
-5. Laravel returns the created message.
+After response:
 
-```php
-return response()->json([
-    'message' => $message->load('sender')
-]);
+```javascript
+newMessage.value.push(message);
 ```
 
-6. Vue adds the message to the current chat.
-
-```js
-newMessage.value.push(response.data.message);
-```
-
-7. The message appears immediately without page reload.
-
+Sender UI updates immediately.
 
 ---
 
 # Receiver Side
 
-```text
-Receiver
- |
- ↓
-Private Channel (chat.receiver_id)
- |
- ↓
-Echo listens MessageSent Event
- |
- ↓
-Receive message data
- |
- ↓
-newMessage.push(event)
- |
- ↓
-UI updates immediately
-```
+Receiver listens:
 
-### Detail
-
-1. Receiver subscribes to private channel.
-
-```js
+```javascript
 window.Echo
-    .private(`chat.${authId}`)
-    .listen(".App\\Events\\MessageSent", (e) => {
+.private(`chat.${authId}`)
+.listen(".App\\Events\\MessageSent", (e)=>{
 
-        newMessage.value.push(e);
+    newMessage.value.push(e);
 
-    });
-```
-
-2. Laravel sends the event to:
-
-```php
-PrivateChannel('chat.' . $message->receiver_id)
+});
 ```
 
 Example:
 
-```text
-sender_id   = 5
-receiver_id = 3
+```
+sender_id   = 3
+receiver_id = 5
 
-Event Channel:
-chat.3
+Channel:
+
+chat.5
 ```
 
-3. Receiver with user ID `3` receives the message.
-
-4. Vue pushes the message into the array.
-
-```js
-newMessage.value.push(e);
-```
-
-5. Vue reactive system updates the UI.
-
+Only user 5 receives the message.
 
 ---
 
-# Complete Flow
+# Read Status Flow
 
-```text
-                 SEND MESSAGE
-
-Sender Vue
-    |
-    | axios POST
-    ↓
-Laravel Controller
-    |
-    | Message::create()
-    ↓
-Database
-    |
-    | MessageSent Event
-    ↓
-Private Channel chat.receiver_id
-    |
-    +----------------+
-    |                |
-    ↓                ↓
-
-Sender UI          Receiver UI
-
-newMessage        Echo Listener
-.push()              |
-    |                |
-    ↓                ↓
-Instant UI       newMessage.push()
-Update               |
-                     ↓
-                Instant UI Update
 ```
-
----
-
-# Read Status Flow (Seen)
-
-```text
 Receiver opens chat
         |
         ↓
-Send read request
+makeReas(message)
         |
         ↓
-Laravel update is_read=true
+POST /message/read/{id}
         |
         ↓
-Broadcast MessageRead Event
+Update is_read = true
+        |
+        ↓
+Broadcast MessageRead
         |
         ↓
 Sender receives event
         |
         ↓
-message.is_read=true
+message.is_read = true
         |
         ↓
-✓ changes to ✓✓
+✓ → ✓✓
 ```
+
+---
+
+## Read Controller
+
+```php
+public function read_message(Message $message)
+{
+    $message->update([
+        'is_read' => true
+    ]);
+
+    broadcast(
+        new MessageRead($message)
+    );
+
+    return response()->json([
+        'success' => true
+    ]);
+}
+```
+
+---
+
+## MessageRead Channel
+
+MessageRead is sent back to sender:
+
+```php
+return new PrivateChannel(
+    'chat.' . $message->sender_id
+);
+```
+
+Example:
+
+```
+User 3 sends message
+        |
+        ↓
+User 5 reads
+        |
+        ↓
+MessageRead → chat.3
+        |
+        ↓
+User 3 gets ✓✓
+```
+
+---
+
+# Complete Flow
+
+```
+SEND
+
+Vue
+ ↓
+Axios
+ ↓
+Laravel
+ ↓
+Database
+ ↓
+MessageSent
+ ↓
+Receiver
+
+
+READ
+
+Receiver
+ ↓
+Read Request
+ ↓
+Database Update
+ ↓
+MessageRead
+ ↓
+Sender
+ ↓
+✓✓
+```
+
+---
+
+# Features
+
+✅ Real-time messaging  
+✅ Private user channel  
+✅ No page reload  
+✅ Unread count  
+✅ Read / Seen status  
+✅ Real-time UI update  
