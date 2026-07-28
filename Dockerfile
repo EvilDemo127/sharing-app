@@ -98,6 +98,7 @@ ENV VITE_REVERB_SCHEME=https
 # -----------------------------
 # Build Frontend
 # -----------------------------
+RUN php artisan optimize:clear
 RUN npm install
 RUN npm run build
 
@@ -127,16 +128,13 @@ logfile=/dev/null\n\
 command=/usr/local/bin/apache2-foreground\n\
 autostart=true\n\
 autorestart=true\n\
-stdout_logfile=/dev/stdout\n\
-stdout_logfile_maxbytes=0\n\
-stderr_logfile=/dev/stderr\n\
-stderr_logfile_maxbytes=0\n\
 \n\
 [program:reverb]\n\
-command=php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
+command=/usr/local/bin/php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080\n\
 directory=/var/www/html\n\
 autostart=true\n\
 autorestart=true\n\
+startsecs=5\n\
 stdout_logfile=/dev/stdout\n\
 stdout_logfile_maxbytes=0\n\
 stderr_logfile=/dev/stderr\n\
