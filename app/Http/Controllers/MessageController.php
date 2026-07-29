@@ -50,7 +50,16 @@ class MessageController extends Controller
         $valiMessage['sender_id'] = Auth::id();
         $message = Message::create($valiMessage);
         $message->load('sender');
-        // broadcast(new MessageSent($message))->toOthers();
+
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            Log::warning('Message broadcast failed', [
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => $message
@@ -61,8 +70,15 @@ class MessageController extends Controller
     {
         $message->is_read = true;
         $message->save();
-       
-        broadcast(new MessageRead($message));
+
+        try {
+            broadcast(new MessageRead($message));
+        } catch (\Throwable $e) {
+            Log::warning('Message read broadcast failed', [
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'success' => true

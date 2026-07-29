@@ -7,18 +7,24 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 
 window.Pusher = Pusher;
+
+const reverbHost = import.meta.env.VITE_REVERB_HOST || window.location.hostname;
+const reverbPort = Number(import.meta.env.VITE_REVERB_PORT || (window.location.protocol === 'https:' ? 443 : 80));
+const reverbScheme = import.meta.env.VITE_REVERB_SCHEME || (window.location.protocol === 'https:' ? 'https' : 'http');
+const forceTls = reverbScheme === 'https';
+
 console.log('VITE_REVERB_APP_KEY:', import.meta.env.VITE_REVERB_APP_KEY);
-console.log('VITE_REVERB_HOST:', import.meta.env.VITE_REVERB_HOST);
-console.log('VITE_REVERB_PORT:', import.meta.env.VITE_REVERB_PORT);
-console.log('VITE_REVERB_SCHEME:', import.meta.env.VITE_REVERB_SCHEME);
+console.log('VITE_REVERB_HOST:', reverbHost);
+console.log('VITE_REVERB_PORT:', reverbPort);
+console.log('VITE_REVERB_SCHEME:', reverbScheme);
 
 window.Echo = new Echo({
-    broadcaster: 'reverb', 
+    broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    wsHost: reverbHost,
+    wsPort: reverbPort,
+    wssPort: reverbPort,
+    forceTLS: forceTls,
     enabledTransports: ['ws', 'wss'],
 });
 
