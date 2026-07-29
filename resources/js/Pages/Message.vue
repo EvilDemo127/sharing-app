@@ -274,6 +274,7 @@ onMounted(() => {
             if (selectedUser.value === e.sender.uuid) {
                 newMessage.value.push(e);
                 makeReas(e);
+                log("Message Read", e.id);
             } else {
                 const newMessageUser = loadUser.value.find(
                     (user) => Number(user.id) === Number(e.sender.id)
@@ -299,6 +300,7 @@ onMounted(() => {
             );
             if (messages) {
                 messages.is_read = e.is_read;
+                log("Message Read", e.message_id);
             }
         });
 });
