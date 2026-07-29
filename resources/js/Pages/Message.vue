@@ -269,7 +269,7 @@ onMounted(() => {
     }
 
     window.Echo.private(`chat.${authId}`)
-        .listen(".App\\Events\\MessageSent", (e) => {
+        .listen(".MessageSent", (e) => {
             
             if (selectedUser.value === e.sender.uuid) {
                 newMessage.value.push(e);

@@ -54,6 +54,11 @@ class MessageController extends Controller
         try {
             broadcast(new MessageSent($message))->toOthers();
             logger('Message broadcast sent');
+
+logger('MessageSent broadcast fired', [
+    'id' => $message->id,
+    'receiver' => $message->receiver_id,
+]);
         } catch (\Throwable $e) {
             Log::warning('Message broadcast failed', [
                 'message_id' => $message->id,
