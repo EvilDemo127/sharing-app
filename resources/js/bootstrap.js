@@ -28,4 +28,11 @@ window.Echo = new Echo({
     enabledTransports: ['ws', 'wss'],
 });
 
-console.log('Echo:', window.Echo);
+window.axios.interceptors.request.use((config) => {
+
+    if (window.Echo && window.Echo.socketId()) {
+        config.headers['X-Socket-Id'] = window.Echo.socketId();
+    }
+
+    return config;
+});
