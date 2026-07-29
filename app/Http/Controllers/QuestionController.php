@@ -112,7 +112,6 @@ class QuestionController extends Controller
         return response()->json(['success' => 'Success deleting ur question']);
     }
 
-    //still not working
     public function search_question(Request $request, $search)
     {
         $userId = Auth::id();

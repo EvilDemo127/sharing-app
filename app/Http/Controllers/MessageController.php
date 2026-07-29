@@ -53,6 +53,7 @@ class MessageController extends Controller
 
         try {
             broadcast(new MessageSent($message))->toOthers();
+            logger('Message broadcast sent');
         } catch (\Throwable $e) {
             Log::warning('Message broadcast failed', [
                 'message_id' => $message->id,
@@ -73,6 +74,7 @@ class MessageController extends Controller
 
         try {
             broadcast(new MessageRead($message));
+            logger('Message broadcast read');
         } catch (\Throwable $e) {
             Log::warning('Message read broadcast failed', [
                 'message_id' => $message->id,
