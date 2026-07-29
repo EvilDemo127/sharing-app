@@ -270,7 +270,7 @@ onMounted(() => {
 
     window.Echo.private(`chat.${authId}`)
         .listen(".MessageSent", (e) => {
-            
+            console.log("MessageSent",e);
             if (selectedUser.value === e.sender.uuid) {
                 newMessage.value.push(e);
                 makeReas(e);
@@ -295,6 +295,7 @@ onMounted(() => {
         })
 
         .listen(".MessageRead", (e) => {
+            log("MessageRead", e);
             const messages = newMessage.value.find(
                 (msg) => msg.id === e.message_id,
             );
