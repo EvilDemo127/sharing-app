@@ -274,7 +274,8 @@ onMounted(() => {
             if (selectedUser.value === e.sender.uuid) {
                 newMessage.value.push(e);
                 makeReas(e);
-                log("Message Read", e.id);
+                console.log();
+                ("Message Read", e.id);
             } else {
                 const newMessageUser = loadUser.value.find(
                     (user) => Number(user.id) === Number(e.sender.id)
@@ -285,23 +286,20 @@ onMounted(() => {
 
                         newMessageUser.unread_count =
                         Number(newMessageUser.unread_count ?? 0) + 1;
-
-                    console.log(
-                        "Unread Count",
-                        newMessageUser.unread_count
-                    );
                 }
             }
         })
 
         .listen(".MessageRead", (e) => {
-            log("MessageRead", e);
+            console.log();
+            ("MessageRead", e);
             const messages = newMessage.value.find(
                 (msg) => msg.id === e.message_id,
             );
             if (messages) {
                 messages.is_read = e.is_read;
-                log("Message Read", e.message_id);
+                console.log();
+                ("Message Read", e.message_id);
             }
         });
 });
