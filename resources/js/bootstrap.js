@@ -5,6 +5,7 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
 window.Pusher = Pusher;
 
@@ -26,6 +27,12 @@ window.Echo = new Echo({
     wssPort: reverbPort,
     forceTLS: forceTls,
     enabledTransports: ['ws', 'wss'],
+    authEndpoint: '/broadcasting/auth',
+    auth: {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    },
 });
 
 window.axios.interceptors.request.use((config) => {

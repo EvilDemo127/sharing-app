@@ -12,16 +12,22 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
+        
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
+        
         $middleware->alias([
             'LoginCheck' => \App\Http\Middleware\LoginCheck::class,
             $middleware->trustProxies(at: '*') //fixed https error in rander
         ]);
     })
+    ->withBroadcasting(
+    __DIR__.'/../routes/channels.php',
+    ['middleware' => ['web', 'auth']],
+)
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
