@@ -12,7 +12,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
-        
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
@@ -21,13 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
             'LoginCheck' => \App\Http\Middleware\LoginCheck::class,
-            $middleware->trustProxies(at: '*') //fixed https error in rander
         ]);
+
+        $middleware->trustProxies(at: '*'); 
     })
     ->withBroadcasting(
-    __DIR__.'/../routes/channels.php',
-    ['middleware' => ['web', 'auth']],
-)
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['web', 'auth']],
+    )
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

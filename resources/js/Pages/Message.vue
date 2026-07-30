@@ -298,8 +298,7 @@ onMounted(() => {
             );
             if (messages) {
                 messages.is_read = e.is_read;
-                console.log();
-                ("Message Read", e.message_id);
+                
             }
         });
 });
