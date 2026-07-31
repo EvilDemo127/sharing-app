@@ -9,7 +9,7 @@
                     @click.prevent="selectUser(user)"
                     :class="
                         selectedUser === user.uuid
-                            ? 'bg-primary text-white'
+                            ? 'border border-primary text-white'
                             : ''
                     "
                     style="cursor: pointer"
@@ -30,7 +30,21 @@
                             style="font-size: 0.88rem"
                             >{{ user.name }}</span
                         >
+                        <span
+                            class="text-success"
+                            style="font-size: 12px"
+                            v-if="
+                                onlineUsers.some(
+                                    (onlineUser) => onlineUser.id === user.id,
+                                )
+                            "
+                            >online</span
+                        >
+                        <span v-else class="text-danger" style="font-size: 12px"
+                            >{{formatUserLastSeen(user.last_seen )}}</span
+                        >
                     </div>
+
                     <div v-if="user.unread_count > 0">
                         <span
                             class="badge rounded-pill px-1 py-1 ms-1 shadow-sm"
@@ -48,10 +62,10 @@
             </div>
 
             <div
-                v-if="selectedUser"
                 class="col-8 bg-white shadow rounded p-3 d-flex flex-column justify-content-between"
             >
                 <div
+                    v-if="selectedUser"
                     ref="messageContainer"
                     class="chat-messages flex overflow-auto mb-3 p-2"
                     style="max-height: 400px"
@@ -109,14 +123,12 @@
                             </div>
                         </div>
                     </div>
-
-                    <div v-else>
-                        <p class="text-muted text-center mt-5">
-                            No conversation logs found. Say hello!
-                        </p>
-                    </div>
                 </div>
-
+                <div v-else>
+                    <p class="text-muted text-center mt-5">
+                        No conversation found. Select some user to talk!
+                    </p>
+                </div>
                 <!-- Chat Input Form -->
                 <form @submit.prevent="sendMessage" v-show="selectedUser">
                     <div
@@ -158,9 +170,10 @@ import Master from "./Layout/Master.vue";
 import Echo from "laravel-echo";
 import axios from "axios";
 
-const notiCount = ref(0);
 const authId = usePage().props.user.id;
 const messageContainer = ref(null);
+let conversationUUID = null;
+const onlineUsers = ref([]);
 
 const props = defineProps({
     users: Array,
@@ -229,12 +242,32 @@ const formatChatTime = (chatDate) => {
     });
 };
 
+const formatUserLastSeen=(chatDate)=>{
+     if(!chatDate) return "just now";
+    const date = new Date(chatDate);
+    const diff =Date.now() - date.getTime()
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+   
+    if(minutes<1){
+         return 'just now'
+    }
+    if(minutes<60) {
+        return `${minutes} minutes ago`
+    }
+    if(hours<24) {
+        return `${hours} hour ago`
+    }
+   return `${days} day ago`
+   
+    
+}
+
 const makeReas = async (message) => {
     await axios
         .post(route("read_message", message.id))
-        .then((res) => {
-            
-        })
+        .then((res) => {})
         .catch((err) => {
             console.log("READ ERROR", err.response);
         });
@@ -248,6 +281,10 @@ watch(
     },
     { deep: true },
 );
+
+// watch(() =>props.selectedUser,(newUUID)=>{
+
+// },{ immediate: true });
 
 watch(
     () => props.users,
@@ -271,13 +308,11 @@ onMounted(() => {
                 makeReas(e);
             } else {
                 const newMessageUser = loadUser.value.find(
-                    (user) => Number(user.id) === Number(e.sender.id)
+                    (user) => Number(user.id) === Number(e.sender.id),
                 );
 
-
                 if (newMessageUser) {
-
-                        newMessageUser.unread_count =
+                    newMessageUser.unread_count =
                         Number(newMessageUser.unread_count ?? 0) + 1;
                 }
             }
@@ -289,14 +324,37 @@ onMounted(() => {
             );
             if (messages) {
                 messages.is_read = e.is_read;
-                
             }
+        });
+
+    window.Echo.join("onlineUser")
+        .here((users) => {
+            onlineUsers.value = users.filter((user) => user.id !== authId);
+        })
+        .joining((user) => {
+            onlineUsers.value.push(user);
+        })
+        .leaving((user) => {
+            onlineUsers.value = onlineUsers.value.filter(
+                (u) => u.id !== user.id,
+            );
+            axios.post(route("offline"))
+                .then(res=>{
+                    console.log(res.data);
+                })
+                .catch(err=>{
+                    console.log(err.response);
+                });
+        })
+        .error((error) => {
+            console.log("CHANNEL ERROR:", error);
         });
 });
 
 onUnmounted(() => {
     if (window.Echo) {
         window.Echo.leave(`chat.${authId}`);
+        window.Echo.leave("chat");
     }
 });
 </script>

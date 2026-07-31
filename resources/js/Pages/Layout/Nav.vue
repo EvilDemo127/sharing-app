@@ -101,13 +101,20 @@
                 </div>
 
                 <!-- Messages Short-link Icon -->
-                <div>
+                <div class="position-relative">
                     <Link
                         :href="route('message')"
                         class="text-reset d-flex align-items-center justify-content-center classic-btn"
                         style="width: 38px; height: 38px"
                     >
                         <i class="fas fa-comment fs-5 text-secondary"></i>
+                        <span
+            v-if="unreadMessage > 0"
+           class="position-absolute top-1 end-1 translate-middle badge rounded-pill bg-danger border border-white font-monospace"
+                            style="font-size: 0.65rem; padding: 0.25em 0.45em"
+        >
+            {{ unreadMessage }}
+        </span>
                     </Link>
                 </div>
 
@@ -262,11 +269,13 @@
 <script setup>
 import { Link, usePage, router } from "@inertiajs/vue3";
 import { LikeAndCom } from "../Comp/LikeAndCom";
-import { ref } from "vue";
-
+import { computed, ref } from "vue";
+const authId = usePage().props.user.id;
 defineOptions({
     name: "Nav",
 });
+
+const unreadMessage =computed(()=>usePage().props.unreadMessage)
 
 // Reactive States
 const dropDownOpen = ref(false);
@@ -284,6 +293,15 @@ const toggleMobileMenu = () => {
 
 const user = usePage().props.user;
 const LandC = LikeAndCom();
+
+Echo.private(`chat.${authId}`)
+.listen(".MessageSent",()=>{
+    unreadMessage.value++;
+}).listen(".MessageRead",()=>{
+    unreadMessage.value--
+})
+
+
 </script>
 
 <style scoped>

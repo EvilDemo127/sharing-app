@@ -10,6 +10,7 @@ use Google\Service\Drive\DriveFile;
 use Google\Service\Drive;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -94,9 +95,22 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user =Auth::user();
+         Log::info("BEFORE", [
+        "id" => $user->id,
+        "last_seen" => $user->last_seen
+    ]);
+
+    $user->last_seen = now();
+    $user->save();
+
+    Log::info("AFTER", [
+        "id" => $user->id,
+        "last_seen" => $user->last_seen
+    ]);
         Auth::logout();
-        // $request->session()->invalidate();
-        // $request->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('login');
     }

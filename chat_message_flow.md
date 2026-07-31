@@ -1,4 +1,4 @@
-# Real-time Chat Message Flow
+# Real-time Chat System Architecture
 
 ## Stack
 
@@ -8,215 +8,496 @@
 - Laravel Echo
 - Reverb / Pusher
 - Private Channel
+- Presence Channel
 
----
 
-# Send Message Flow
+# 1. SEND MESSAGE FLOW
+
 
 ```
-Sender Vue
-    |
-    | Axios POST
-    ↓
+USER A (Sender)
+
+        |
+        |
+        | Axios POST
+        ↓
+
+Vue Component
+
+        |
+        ↓
+
 Laravel Controller
-    |
-    | Save Message
-    ↓
+
+        |
+        |
+        ├── Validate Request
+        |
+        ├── Save Message
+        |
+        ↓
+
 Database
-    |
-    | Broadcast MessageSent
-    ↓
+
+        |
+        |
+        ├── MessageSent Event
+        |
+        ↓
+
 Private Channel
+
 chat.receiver_id
-    |
-    ↓
-Receiver Echo Listener
-    |
-    ↓
-UI Update
+
+        |
+        ↓
+
+USER B (Receiver)
+
+        |
+        ↓
+
+Echo Listener
+
+        |
+        ↓
+
+Update Chat UI
 ```
 
----
 
-## Sender Side
-
-User sends message:
+## Sender Vue
 
 ```javascript
 axios.post(
     route("store_message"),
     form.data()
-)
+);
 ```
 
-Laravel:
 
-```php
-$message = Message::create([
-    'sender_id' => Auth::id(),
-    'receiver_id' => $request->receiver_id,
-    'message' => $request->message
-]);
-
-broadcast(new MessageSent($message))->toOthers();
-```
-
-After response:
+Sender UI update:
 
 ```javascript
-newMessage.value.push(message);
+messages.value.push(message);
 ```
 
-Sender UI updates immediately.
 
 ---
 
-# Receiver Side
+## Laravel Controller
 
-Receiver listens:
+```php
+$message = Message::create([
+
+    'sender_id'   => Auth::id(),
+
+    'receiver_id' => $request->receiver_id,
+
+    'message'     => $request->message,
+
+]);
+
+
+broadcast(
+    new MessageSent($message)
+)->toOthers();
+```
+
+
+`toOthers()` it mean not send back to sender
+
+
+---
+
+# Receiver Echo Listener
 
 ```javascript
 window.Echo
 .private(`chat.${authId}`)
-.listen(".App\\Events\\MessageSent", (e)=>{
 
-    newMessage.value.push(e);
+.listen(
+    ".App\\Events\\MessageSent",
 
-});
+    (e)=>{
+
+        messages.value.push(e);
+
+    }
+);
 ```
+
 
 Example:
 
 ```
-sender_id   = 3
-receiver_id = 5
+User A
+
+id = 3
+
+
+User B
+
+id = 5
+
 
 Channel:
 
 chat.5
 ```
 
-Only user 5 receives the message.
+User 5 only user-5 can recieve
+
 
 ---
 
-# Read Status Flow
+
+# 2. READ / SEEN STATUS FLOW
+
 
 ```
-Receiver opens chat
+USER B Opens Message
+
         |
         ↓
-makeReas(message)
+
+markRead(message)
+
         |
         ↓
+
 POST /message/read/{id}
+
         |
         ↓
-Update is_read = true
+
+Update Database
+
+is_read = true
+
         |
         ↓
+
 Broadcast MessageRead
+
         |
         ↓
-Sender receives event
+
+Sender Channel
+
+chat.sender_id
+
         |
         ↓
-message.is_read = true
+
+USER A
+
         |
         ↓
+
+Update UI
+
 ✓ → ✓✓
 ```
 
----
 
 ## Read Controller
 
 ```php
 public function read_message(Message $message)
 {
+
     $message->update([
-        'is_read' => true
+        'is_read'=>true
     ]);
+
 
     broadcast(
         new MessageRead($message)
     );
 
+
     return response()->json([
-        'success' => true
+        'success'=>true
     ]);
 }
 ```
 
----
 
 ## MessageRead Channel
 
-MessageRead is sent back to sender:
-
 ```php
 return new PrivateChannel(
-    'chat.' . $message->sender_id
+    "chat.".$message->sender_id
 );
 ```
 
-Example:
+
+Flow:
 
 ```
-User 3 sends message
-        |
+User A sends message
+
         ↓
-User 5 reads
-        |
+
+User B reads
+
         ↓
-MessageRead → chat.3
-        |
-        ↓
-User 3 gets ✓✓
-```
 
----
-
-# Complete Flow
-
-```
-SEND
-
-Vue
- ↓
-Axios
- ↓
-Laravel
- ↓
-Database
- ↓
-MessageSent
- ↓
-Receiver
-
-
-READ
-
-Receiver
- ↓
-Read Request
- ↓
-Database Update
- ↓
 MessageRead
- ↓
-Sender
- ↓
-✓✓
+
+        ↓
+
+chat.3
+
+        ↓
+
+User A gets ✓✓
 ```
 
+
 ---
+
+
+# 3. ONLINE STATUS FLOW
+
+Using Presence Channel
+
+
+```
+USER Login
+
+        |
+        ↓
+
+Echo.join("onlineUser")
+
+        |
+        |
+        ├─────────────┐
+        ↓             ↓
+
+     here()       joining()
+
+        |             |
+
+ Existing Users    New User
+
+
+        |
+        ↓
+
+ onlineUsers[]
+
+        |
+        ↓
+
+ UI Update
+
+
+🟢 Online
+
+⚪ Offline
+```
+
+
+---
+
+## Vue Presence Listener
+
+
+```javascript
+window.Echo.join("onlineUser")
+
+
+.here((users)=>{
+
+    onlineUsers.value =
+        users.filter(
+            user => user.id !== authId
+        );
+
+})
+
+
+.joining((user)=>{
+
+    onlineUsers.value.push(user);
+
+})
+
+
+.leaving((user)=>{
+
+    onlineUsers.value =
+        onlineUsers.value.filter(
+            u => u.id !== user.id
+        );
+
+});
+```
+
+
+---
+
+# Online User UI
+
+
+```vue
+<div 
+v-for="user in users"
+:key="user.id"
+>
+
+{{user.name}}
+
+
+<span
+v-if="
+onlineUsers.some(
+    online => online.id === user.id
+)
+"
+class="text-success small"
+>
+Online
+</span>
+
+
+<span
+v-else
+class="text-muted small"
+>
+Offline
+</span>
+
+
+</div>
+```
+
+
+---
+
+
+# Complete Architecture
+
+
+```
+                 USER A
+                   |
+                   |
+             Send Message
+                   |
+                   ↓
+              Axios POST
+                   |
+                   ↓
+              Laravel
+                   |
+        ┌──────────┴──────────┐
+        ↓                     ↓
+
+ Save Database          Broadcast Event
+
+                              |
+                              ↓
+
+                     Private Channel
+
+                         chat.userB
+
+                              |
+                              ↓
+
+                         USER B
+
+
+
+========================================
+
+
+
+                 READ STATUS
+
+
+USER B Reads Message
+
+        |
+        ↓
+
+POST /read/{id}
+
+        |
+        ↓
+
+Database
+
+is_read=true
+
+        |
+        ↓
+
+MessageRead Event
+
+        |
+        ↓
+
+chat.userA
+
+        |
+        ↓
+
+USER A
+
+✓✓
+
+
+
+========================================
+
+
+
+                 ONLINE STATUS
+
+
+User Opens App
+
+        |
+        ↓
+
+Presence Channel
+
+onlineUser
+
+        |
+        ├── here()
+        |
+        ├── joining()
+        |
+        └── leaving()
+
+        |
+        ↓
+
+onlineUsers[]
+
+        |
+        ↓
+
+🟢 / ⚪
+```
+
 
 # Features
 
 ✅ Real-time messaging  
 ✅ Private user channel  
 ✅ No page reload  
-✅ Unread count  
+✅ Message persistence  
 ✅ Read / Seen status  
-✅ Real-time UI update  
+✅ Online indicator  
+✅ Presence tracking  
+✅ Unread count  
+✅ Last seen (later add)  
+✅ Notification ( later add)  
+✅ Typing indicator (later add)

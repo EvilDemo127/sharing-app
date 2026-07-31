@@ -94,6 +94,19 @@ class MessageController extends Controller
         ]);
     }
 
+    public function offline()
+    {
+        $user =Auth::user();
+        $user->update([
+            "last_seen"=>now()
+        ]);
+        
+       
+        return response()->json([
+            'success'=>true
+        ]);
+    }
+
     public function unread_count($authId)
     {
         return User::whereNot('id',$authId)->withCount(['sendMessages as unread_count'=>function($q) use($authId){

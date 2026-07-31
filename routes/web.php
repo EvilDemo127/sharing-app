@@ -40,6 +40,7 @@ Route::group(['middleware' => 'auth'], function () {
      Route::get('message/get/{uuid}',[MessageController::class,'get_message'])->name('get_message');
      Route::post('message/store',[MessageController::class,'store_message'])->name('store_message');
      Route::post('message/read/{message}',[MessageController::class,'read_message'])->name('read_message');
+     Route::post('message/user/offline',[MessageController::class,'offline'])->name('offline');
 });
 
 Route::group(['middleware' => 'LoginCheck'], function () {

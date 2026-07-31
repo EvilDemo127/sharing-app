@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Message;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,10 +44,15 @@ class HandleInertiaRequests extends Middleware
                 'user'=> fn() =>$request->user() ? $request->user()->only('id','name','email','image'): null,
 
                 'tag'=>fn() =>Tag::select('id','name','slug')->get(),
-        
+                'unreadMessage'=>function(){
+                    if(!Auth::check()){
+                        return 0;
+                    }
+                    return Message::where('receiver_id',Auth::id())->where('is_read',false)->count();
+                },
             
             
-            
+
             'flash'=>[
                 'success'=>fn() =>$request->session()->get('success'),
                 'error'=>fn() =>$request->session()->get('error'),
