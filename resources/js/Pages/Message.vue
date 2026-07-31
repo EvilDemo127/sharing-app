@@ -204,8 +204,6 @@ const selectUser = (user) => {
 
 const sendMessage = () => {
     if (!form.message.trim()) return;
-    console.log(form.data());
-    
     axios
         .post(route("store_message"), form.data())
         .then((res) => {
@@ -232,8 +230,6 @@ const formatChatTime = (chatDate) => {
 };
 
 const makeReas = async (message) => {
-    console.log("message read",message.id);
-    
     await axios
         .post(route("read_message", message.id))
         .then((res) => {
@@ -270,12 +266,9 @@ onMounted(() => {
 
     window.Echo.private(`chat.${authId}`)
         .listen(".MessageSent", (e) => {
-            console.log("MessageSent",e);
             if (selectedUser.value === e.sender.uuid) {
                 newMessage.value.push(e);
                 makeReas(e);
-                console.log();
-                ("Message Read", e.id);
             } else {
                 const newMessageUser = loadUser.value.find(
                     (user) => Number(user.id) === Number(e.sender.id)
@@ -291,8 +284,6 @@ onMounted(() => {
         })
 
         .listen(".MessageRead", (e) => {
-            console.log();
-            ("MessageRead", e);
             const messages = newMessage.value.find(
                 (msg) => msg.id === e.message_id,
             );

@@ -44,8 +44,8 @@ class MessageController extends Controller
     public function store_message(Request $request)
     {
         $valiMessage = $request->validate([
-            'receiver_id' => 'required',
-            'message' => 'required'
+            'receiver_id' => ['required', 'exists:users,id','different:'.Auth::id()],
+            'message' => ['required', 'string', 'max:200'],
         ]);
         $valiMessage['sender_id'] = Auth::id();
         $message = Message::create($valiMessage);
@@ -73,6 +73,10 @@ class MessageController extends Controller
 
     public function read_message(Message $message)
     {
+        if($message->receiver_id !==Auth::id())
+            {
+                abort(403);
+            }
         $message->is_read = true;
         $message->save();
 
