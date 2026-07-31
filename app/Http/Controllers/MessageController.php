@@ -15,7 +15,8 @@ class MessageController extends Controller
 {
     public function message()
     {
-        $users = User::whereNot('id', auth()->id())->get();
+        $authId = Auth::id();
+        $users =$this->unread_count($authId);
         return Inertia::render('Message', ['users' => $users]);
     }
 
@@ -31,9 +32,7 @@ class MessageController extends Controller
             $q->where('sender_id', $searchId)->where('receiver_id', $authId);
         })->orderBy('created_at', 'asc')->get();
 
-        $users = User::whereNot('id', auth()->id())->withCount(['recieveMessages as unread_count' => function ($q) use ($authId) {
-            $q->where('sender_id', $authId)->where('is_read', false);
-        }])->get();
+        $users =$this->unread_count($authId);
         return Inertia::render('Message', [
             'users' => $users,
             'messages' => $messages,
@@ -93,5 +92,12 @@ class MessageController extends Controller
         return response()->json([
             'success' => true
         ]);
+    }
+
+    public function unread_count($authId)
+    {
+        return User::whereNot('id',$authId)->withCount(['sendMessages as unread_count'=>function($q) use($authId){
+            $q->where('receiver_id',$authId)->where('is_read',false);
+        }])->get();
     }
 }
