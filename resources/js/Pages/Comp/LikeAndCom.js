@@ -2,6 +2,7 @@ import { onMounted, ref } from "vue";
 import axios from "axios";
 import { computed } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
+import Echo from "laravel-echo";
 
 export function LikeAndCom() {
     const comment = ref("");
@@ -11,14 +12,14 @@ export function LikeAndCom() {
     const page = usePage();
     const activeDropdownId = ref(null);
     const mobileMenuVie = ref(null);
-    const notiCount =ref(0);
+    const notiCount = ref(0);
 
-    onMounted(()=>{
-        const loginId =page.props.user.id
-        window.Echo.private(`chat.${loginId}`).listen('MessageSend',(e)=>{
-            notiCount.value++
-        })
-    })
+    const loginId = page.props.user.id;
+    onMounted(() => {
+        window.Echo.private(`chat.${loginId}`).listen("MessageSend", (e) => {
+            notiCount.value++;
+        });
+    });
 
     //like handle
     const click_like = (like) => {
@@ -29,6 +30,17 @@ export function LikeAndCom() {
                 like.is_Like = res.data.is_like;
             })
             .catch((err) => console.log(err));
+    };
+
+    //real time like handle
+    const realTimeLike = (like) => {
+        window.Echo.private(`questionLike.${like.id}`).listen(
+            ".QuestionLike",
+            (e) => {
+                console.log(e.like_count);
+                like.like_count = e.like_count;
+            },
+        );
     };
 
     //question save
@@ -76,6 +88,37 @@ export function LikeAndCom() {
                 comment.value = "";
             })
             .catch();
+    };
+
+    const realTimeComment = (comment) => {
+        window.Echo.private(`questionComment.${comment.id}`).listen(
+            ".QuestionComment",
+            (e) => {
+                switch (e.action) {
+                    case "create":
+                        comment.comment.unshift(e.comment);
+                        comment.comment_count = e.comment_count;
+                        break;
+
+                    case "update":
+                        const updateIndex = comment.comment.findIndex(
+                            (com) => com.id === e.comment.id,
+                        );
+                        if (updateIndex !== -1) {
+                            comment.comment[updateIndex] = e.comment;
+                        }
+                        break;
+                    case "delete":
+                        const deleteIndex = comment.comment.findIndex(
+                            (com) => com.id === e.comment.id,
+                        );
+                        if (deleteIndex !== -1) {
+                            comment.comment.splice(deleteIndex, 1);
+                        }
+                        break;
+                }
+            },
+        );
     };
 
     //reply comment handle
@@ -132,11 +175,15 @@ export function LikeAndCom() {
     };
 
     const searching = () => {
-        if(!search.value || !search.value.trim()) return 
-        router.get(route("question.search", search.value),{}, {
-            preserveState: true,
-            replace: true,
-        });
+        if (!search.value || !search.value.trim()) return;
+        router.get(
+            route("question.search", search.value),
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const isOwner = (id) => {
@@ -171,6 +218,8 @@ export function LikeAndCom() {
         mobileMenuVie,
         mobileMenu,
         activeDropdownId,
-        notiCount
+        notiCount,
+        realTimeLike,
+        realTimeComment,
     };
 }

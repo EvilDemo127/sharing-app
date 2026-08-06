@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         QuestionTag::factory(20)->create();
         // User::factory()->create([
         //     'name' => 'user',
-        //     'email' => 'jet@gmail.com',
+        //     'email' => 'user@gmail.com',
         //     'password'=> Hash::make('password'),
         //     'image'=>'default.png'
         // ]);
@@ -46,12 +46,7 @@ class DatabaseSeeder extends Seeder
         //     'slug'=>Str::slug('Mobile Dev'),
         // ]);
 
-        // Question::create([
-        //     'user_id'=>1,
-        //     'slug'=>Str::slug('What is google ?'),
-        //     'title'=>'What is google ?',
-        //     'description'=>'Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum corrupti similique perferendis officiis sint illo rem, sit beatae voluptatum quibusdam.'
-        // ]);
+  
 
         // QuestionTag::create([
         //     'question_id'=>1,

@@ -17,12 +17,18 @@
                         <div class="col-12 form-group">
                             <label class="form-label fw-medium text-secondary small">Question Title</label>
                             <input type="text" v-model="form.title" class="form-control py-2.5 shadow-none" placeholder="Be specific and imagine you’re asking a person">
+                            <div v-if="form.errors.title" class="text-danger small mt-1 d-flex align-items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.errors.title }}
+                            </div>
                         </div>
 
                         <!-- Description Textarea -->
                         <div class="col-12 form-group">
                             <label class="form-label fw-medium text-secondary small">Description</label>
                             <textarea v-model="form.description" class="form-control shadow-none" rows="5" placeholder="Include all the information someone would need to answer your question"></textarea>
+                            <div v-if="form.errors.description" class="text-danger small mt-1 d-flex align-items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.errors.description }}
+                            </div>
                         </div>
 
                         <!-- Modern Checkbox Tags Selector -->
@@ -40,7 +46,7 @@
 
                         <!-- Submit Button -->
                         <div class="col-12 d-flex justify-content-end mt-4 pt-2 border-top border-light">
-                            <button type="submit" class="btn btn-success px-4 py-2 fw-bold text-capitalize shadow-none" style="border-radius: 6px;">
+                            <button type="submit" class="btn btn-success px-4 py-2 fw-bold text-capitalize shadow-none" style="border-radius: 6px;" :disabled="form.processing">
                                 <i class="fas fa-paper-plane me-1"></i> Submit Question
                             </button>
                         </div>
@@ -79,7 +85,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import Master from './Layout/Master.vue';
-import axios from 'axios';
 import { toast } from 'vue3-toastify';
     defineOptions({
         name:'CreateQuestion'
@@ -95,20 +100,12 @@ const form =useForm({
 });
 
 const create_question=()=>{
-    console.log(form);
-    
-    axios.post(route('question.store'),form)
-        .then(res =>{
-            if(res.data.message)
-                {
-                    toast.success(res.data.message)
-                    form.reset();
-                }
-            
-        })
-        .catch(err=>console.log(err)
-        )
-    
+    form.post(route('question.store'), {
+        onSuccess: () => {
+            toast.success('Question posted!');
+            form.reset();
+        },
+    });
 }
 
 </script>

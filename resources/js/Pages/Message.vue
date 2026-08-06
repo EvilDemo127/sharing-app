@@ -182,7 +182,12 @@ const props = defineProps({
 });
 
 const newMessage = ref(props.messages || []);
-const selectedUser = ref(null);
+// props.selectedUser may arrive as a plain uuid/id, or as the full user object
+const initialSelectedUser =
+    props.selectedUser && typeof props.selectedUser === "object"
+        ? props.selectedUser.uuid
+        : props.selectedUser || null;
+const selectedUser = ref(initialSelectedUser);
 const loadUser = ref(props.users);
 
 const form = useForm({
@@ -296,6 +301,11 @@ watch(
 );
 
 onMounted(() => {
+    
+    if (selectedUser.value) {
+        scolBut();
+    }
+
     if (!window.Echo) {
         console.log("Echo is not ready");
         return;

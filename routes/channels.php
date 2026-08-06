@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Question;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
@@ -23,3 +24,11 @@ Broadcast::channel('onlineUser',function ($user){
         'name'=>$user->name
     ];
 }); 
+
+Broadcast::channel('questionLike.{id}',function($user,$id){
+    return true;
+});
+
+Broadcast::channel('questionComment.{id}',function($user,$id){
+    return true;
+});

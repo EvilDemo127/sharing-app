@@ -6,6 +6,7 @@ import { ZiggyVue } from 'ziggy-js';
 import '../css/app.css';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import './bootstrap';
 
 createInertiaApp({
   resolve: name => {

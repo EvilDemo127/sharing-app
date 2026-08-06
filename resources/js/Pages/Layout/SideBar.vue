@@ -1,5 +1,5 @@
 <template>
-    <div class="sidebar-wrapper">
+    <div class="sidebar-wrapper d-none d-md-block">
         <!-- 1. TAGS SIDEBAR PANEL -->
         <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden" v-if="isQues">
             <!-- Premium Action Button -->
@@ -52,7 +52,7 @@
                     <Link 
                         :href="route('profile.edit')" 
                         class="nav-link menu-item d-flex align-items-center gap-3 px-3 py-2.5 rounded-2"
-                        :class="{ 'active-menu': $page.url.startsWith('/profile') }"
+                        :class="{ 'active-menu': $page.url.startsWith('/profile/edit') }"
                     >
                         <i class="fas fa-user-cog text-muted icon-width"></i>
                         <span class="fw-medium">Account Settings</span>
@@ -61,13 +61,16 @@
                     <Link 
                         :href="route('question.own')" 
                         class="nav-link menu-item d-flex align-items-center gap-3 px-3 py-2.5 rounded-2"
+                        :class="{ 'active-menu': $page.url.startsWith('/profile/my-question') }"
                     >
                         <i class="fas fa-question-circle text-muted icon-width"></i>
                         <span class="fw-medium">My Questions</span>
                     </Link>
 
                     <Link 
+                    :href="route('question.save')"
                         class="nav-link menu-item d-flex align-items-center gap-3 px-3 py-2.5 rounded-2"
+                        :class="{ 'active-menu': $page.url.startsWith('/profile/question') }"
                     >
                         <i class="fas fa-bookmark text-muted icon-width"></i>
                         <span class="fw-medium">Saved Bookmarks</span>
@@ -100,7 +103,6 @@ const isQues = computed(() => {
 </script>
 
 <style scoped>
-/* Icon အကျယ် ပုံသေညှိရန် */
 .icon-width {
     width: 20px;
     text-align: center;
@@ -122,7 +124,6 @@ const isQues = computed(() => {
     font-size: 0.75rem;
     transition: all 0.2s ease-in-out;
 }
-/* Tag ကို Hover တင်လိုက်သည့်အခါ Effect ပြုလုပ်ခြင်း */
 .tag-item:hover {
     background-color: rgba(18, 102, 241, 0.05);
 }
@@ -150,7 +151,6 @@ const isQues = computed(() => {
 .menu-item:hover .text-muted {
     color: #1266f1 !important;
 }
-/* လက်ရှိရောက်နေသော Active Menu ဖြစ်ပါက မီးလင်းနေစေရန် */
 .active-menu {
     background-color: rgba(18, 102, 241, 0.07) !important;
     color: #1266f1 !important;
@@ -160,6 +160,3 @@ const isQues = computed(() => {
     color: #1266f1 !important;
 }
 </style>
-
-
-

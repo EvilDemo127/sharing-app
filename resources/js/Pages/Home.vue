@@ -67,10 +67,10 @@
                             {{ q.is_fixed ? "Fixed" : "Need Fix" }}
                         </span>
                         <h6
-                            class="text-dark fw-bold mb-0 lh-base flex-grow-1 text-break"
+                            class="text-dark fw-bold mb-0 lh-base flex-grow-1 text-break truncate"
                             style="font-size: 0.95rem"
                         >
-                            {{ q.title || q.slug }}
+                            {{q.title || q.slug }}
                         </h6>
                     </div>
 
@@ -142,7 +142,7 @@
                                     <Link
                                         @click.prevent="
                                             LandC.needFixed(q.id);
-                                            LandC.activeDropdownId = null;
+                                            LandC.mobileMenuVie.value = null;
                                         "
                                         class="dropdown-item py-2 text-warning d-flex align-items-center gap-2 small fw-semibold"
                                         href="#"
@@ -158,7 +158,7 @@
                                     <Link
                                         @click.prevent="
                                             LandC.needFixed(q.id);
-                                            LandC.activeDropdownId = null;
+                                            LandC.mobileMenuVie.value = null;
                                         "
                                         class="dropdown-item py-2 text-warning d-flex align-items-center gap-2 small fw-semibold"
                                         href="#"
@@ -178,7 +178,7 @@
                                         :href="
                                             route('edit_question', { id: q.id })
                                         "
-                                        @click="LandC.activeDropdownId = null"
+                                        @click="LandC.mobileMenuVie.value = null"
                                         class="dropdown-item py-2 text-primary d-flex align-items-center gap-2 small fw-semibold"
                                     >
                                         <i
@@ -197,7 +197,7 @@
                                     <a
                                         @click.prevent="
                                             LandC.deleteQues(q.id);
-                                            LandC.activeDropdownId = null;
+                                            LandC.mobileMenuVie.value = null;
                                         "
                                         class="dropdown-item py-2 text-danger d-flex align-items-center gap-2 small fw-semibold"
                                         href="#"
@@ -366,7 +366,7 @@
                                             <span
                                                 class="fw-bold text-dark"
                                                 style="font-size: 0.88rem"
-                                                >{{ q.user.name }}</span
+                                                >{{ com.user.name }}</span
                                             >
                                             <span
                                                 class="text-muted"
@@ -498,6 +498,11 @@
     color: #1266f1 !important;
     border-color: rgba(18, 102, 241, 0.2) !important;
 }
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .fade-in {
     animation: slideDown 0.2s ease-out;
 }
@@ -535,18 +540,17 @@ import Master from "./Layout/Master.vue";
 import Content from "./Layout/Content.vue";
 import { LikeAndCom } from "./Comp/LikeAndCom.js";
 import axios from "axios";
-import { ref, toRefs } from "vue";
+import { onMounted, onUnmounted, ref, toRefs } from "vue";
 
 defineOptions({
     name: "Home",
 });
 
-defineProps({
+const props=defineProps({
     questions: Object,
 });
 const page = usePage();
 const LandC = LikeAndCom();
-
 // login alert
 if (page.props.flash?.success) {
     toast.success(page.props.flash.success, {
@@ -555,4 +559,24 @@ if (page.props.flash?.success) {
     });
     page.props.flash.success = null;
 }
+
+onMounted(()=>{
+    props.questions?.data.forEach(qus => {
+        LandC.realTimeLike(qus)
+        LandC.realTimeComment(qus)
+    });
+    
+
+})
+let subscribedQuestions = [];
+
+onUnmounted(()=>{
+    subscribedQuestions.forEach((id) => {
+
+        window.Echo.leave(`questionLike.${id}`);
+        window.Echo.leave(`questionComment.${id}`);
+
+    });
+})
+
 </script>

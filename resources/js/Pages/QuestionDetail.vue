@@ -110,7 +110,7 @@
                                     <Link
                                         @click.prevent="
                                             LandC.needFixed(ques.id);
-                                            LandC.activeDropdownId = null;
+                                            LandC.mobileMenuVie.value = null;
                                         "
                                         class="dropdown-item py-2 text-warning d-flex align-items-center gap-2 small fw-semibold"
                                         href="#"
@@ -126,7 +126,7 @@
                                     <Link
                                         @click.prevent="
                                             LandC.needFixed(ques.id);
-                                            LandC.activeDropdownId = null;
+                                            LandC.mobileMenuVie.value = null;
                                         "
                                         class="dropdown-item py-2 text-warning d-flex align-items-center gap-2 small fw-semibold"
                                         href="#"
@@ -144,7 +144,7 @@
                                 <li>
                                     <Link
                                         :href="route('edit_question', ques.id)"
-                                        @click="LandC.activeDropdownId = null"
+                                        @click="LandC.mobileMenuVie.value = null"
                                         class="dropdown-item py-2 text-primary d-flex align-items-center gap-2 small fw-semibold"
                                     >
                                         <i
@@ -163,7 +163,7 @@
                                     <Link
                                         @click.prevent="
                                             LandC.deleteQues(ques.id);
-                                            LandC.activeDropdownId = null;
+                                            LandC.mobileMenuVie.value = null;
                                         "
                                         class="dropdown-item py-2 text-danger d-flex align-items-center gap-2 small fw-semibold"
                                         href="#"
@@ -320,7 +320,7 @@
                                         <span
                                             class="fw-bold text-dark"
                                             style="font-size: 0.88rem"
-                                            >{{ ques.user.name }}</span
+                                            >{{ com.user.name }}</span
                                         >
                                         <span
                                             class="text-muted"

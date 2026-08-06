@@ -20,7 +20,7 @@ class QuestionFactory extends Factory
         $title =$this->faker->sentence(5);
         return [
             
-            'user_id'=>$this->faker->randomElement([1, 2]),
+            'user_id'=>$this->faker->randomElement([3, 4]),
             'title'=>$title,
             'slug'=>Str::slug($title),
             'description'=>$this->faker->text(100)

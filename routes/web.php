@@ -41,6 +41,8 @@ Route::group(['middleware' => 'auth'], function () {
      Route::post('message/store',[MessageController::class,'store_message'])->name('store_message');
      Route::post('message/read/{message}',[MessageController::class,'read_message'])->name('read_message');
      Route::post('message/user/offline',[MessageController::class,'offline'])->name('offline');
+     Route::get('message/user/noti',[MessageController::class,'get_noti'])->name('real_time_noti');
+     Route::post('message/user/readNoti/{id}',[MessageController::class,'read_noti'])->name('read_noti');
 });
 
 Route::group(['middleware' => 'LoginCheck'], function () {

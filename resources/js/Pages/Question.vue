@@ -1,6 +1,6 @@
 <template>
     <Master>
-        <div class="container py-2" v-for="q in questions">
+        <div class="container py-2" v-for="q in questions" :key="q.id">
             <div
                 class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white"
             >
@@ -187,22 +187,18 @@
                                 v-for="com in q.comment"
                                 :key="com.id"
                             >
-                             {{ com.user_id }}
                                 <div
                                     class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3 mb-3"
                                 >
-                                    
                                     <div
                                         class="d-flex align-items-center gap-2.5"
                                     >
-                                        <!-- <img
+                                        <img
                                             :src="
                                                 com.user.image
-                                                    ? '/profile/' +
-                                                      com.user.image
+                                                    ? `https://lh3.googleusercontent.com/d/${com.user.image}`
                                                     : '/images/default-avatar.png'
                                             "
-                                            
                                             class="rounded-circle border flex-shrink-0"
                                             style="
                                                 width: 32px;
@@ -210,12 +206,12 @@
                                                 object-fit: cover;
                                             "
                                             alt="User Avatar"
-                                        /> -->
+                                        />
                                         <div class="d-flex flex-column lh-sm">
                                             <span
                                                 class="fw-bold text-dark"
                                                 style="font-size: 0.88rem"
-                                                >{{ q.user.name }}</span
+                                                >{{ com.user.name }}</span
                                             >
                                             <span
                                                 class="text-muted"

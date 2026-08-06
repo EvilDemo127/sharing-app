@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                     }
                     return Message::where('receiver_id',Auth::id())->where('is_read',false)->count();
                 },
+                
             
             
 

@@ -26,9 +26,9 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <!-- Counters Area -->
                 <div class="d-flex align-items-center gap-4 text-muted">
-                    <div class="d-flex align-items-center gap-1.5 cursor-pointer hover-scale" @click="click_like(like.id)" style="cursor: pointer;">
-                        <i :class="like.is_Like ? 'fas fa-heart text-danger fs-5' : 'far fa-heart text-muted fs-5'"></i>
-                        <span class="small fw-semibold" :class="{'text-danger': like.is_Like}">{{ questions.like_count || 0 }}</span>
+                    <div class="d-flex align-items-center gap-1.5 cursor-pointer hover-scale" @click="click_like(questions.id)" style="cursor: pointer;">
+                        <i :class="questions.is_Like ? 'fas fa-heart text-danger fs-5' : 'far fa-heart text-muted fs-5'"></i>
+                        <span class="small fw-semibold" :class="{'text-danger': questions.is_Like}">{{ questions.like_count || 0 }}</span>
                     </div>
                     <div class="d-flex align-items-center gap-1.5 cursor-pointer hover-scale" @click="showCommentBox = !showCommentBox" style="cursor: pointer;">
                         <i class="far fa-comment text-success fs-5"></i>
@@ -60,7 +60,7 @@
 
                 <!-- Clean Comments Stream -->
                 <div class="d-flex flex-column gap-3 mb-2">
-                    <div class="bg-light rounded-3 p-3 border border-light" v-for="com in like.comment" :key="com.id">
+                    <div class="bg-light rounded-3 p-3 border border-light" v-for="com in questions.comment" :key="com.id">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <div class="d-flex align-items-center gap-2">
                                 <img :src="com.user.image ? '/profile/' + com.user.image : '/images/default-avatar.png'" class="rounded-circle border" style="width: 26px; height: 26px; object-fit: cover;" alt="User Avatar">
@@ -88,7 +88,6 @@
 
 
 <script setup>
-import Master from './Layout/Master.vue';
 import { usePage } from '@inertiajs/vue3';
 import { ref } from 'vue'; 
 import axios from 'axios';
@@ -97,9 +96,8 @@ import axios from 'axios';
         name:'QuesComp'
     });
 
-   const props=defineProps({
-    type: Object,
-    required: true
+   const props = defineProps({
+    ques: { type: Object, required: true }
 });
 
     const page =usePage()
@@ -111,8 +109,8 @@ import axios from 'axios';
   const click_like =(id) =>{    
       axios.post(route('like.handle',id))
             .then(res =>{
-              questions.value.like_count =res.data.like_count
-              questions.value.is_Like =res.data.is_like
+              questions.like_count = res.data.like_count
+              questions.is_Like = res.data.is_like
             })
             .catch(err => console.log(err)
             )
@@ -127,12 +125,10 @@ import axios from 'axios';
         })
               .then(res=>{
                 comment.value='';
-                console.log(res);
-                // like.value.comment=res.data.comment.comment
-                like.value.comment.unshift(res.data.comment);
-                like.value.comment_count=res.data.comment_count
+                questions.comment.unshift(res.data.comment);
+                questions.comment_count=res.data.comment_count
               }) 
-              .catch() 
+              .catch(err => console.log(err)) 
     }
 
 </script>

@@ -113,4 +113,20 @@ class MessageController extends Controller
             $q->where('receiver_id',$authId)->where('is_read',false);
         }])->get();
     }
+
+    public function get_noti()
+    {
+        $user =Auth::user();
+        $noti =$user->notifications;
+        return response()->json(['noti'=>$noti]);
+    }
+
+    public function read_noti($id)
+    {
+        $user =Auth::user();
+        $user->notifications()->where('id',$id)->update([
+            'read_at'=>now()
+        ]);
+        return response()->json(['success'=>true]);
+    }
 }
